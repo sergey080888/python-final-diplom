@@ -96,7 +96,14 @@ class User(AbstractUser):
 class Shop(models.Model):
     name = models.CharField(max_length=50, verbose_name="Название")
     url = models.URLField(verbose_name="Ссылка", null=True, blank=True)
-
+    user = models.OneToOneField(
+        User,
+        verbose_name="Пользователь",
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+    )
+    state = models.BooleanField(verbose_name="статус получения заказов", default=True)
     class Meta:
         verbose_name = "Магазин"
         verbose_name_plural = "Список магазинов"
@@ -141,6 +148,7 @@ class Product(models.Model):
 
 
 class ProductInfo(models.Model):
+    external_id = models.PositiveIntegerField(verbose_name="Внешний ИД")
     product = models.ForeignKey(
         Product,
         verbose_name="Продукт",
@@ -156,6 +164,7 @@ class ProductInfo(models.Model):
         related_name="product_info",
     )
     name = models.CharField(max_length=50, verbose_name="Название")
+    model = models.CharField(max_length=50, verbose_name="Модель")
     quantity = models.PositiveIntegerField(verbose_name="Количество")
     price = models.PositiveIntegerField(verbose_name="Цена")
     price_rrc = models.PositiveIntegerField(verbose_name="Рекомендуемая розничная цена")
