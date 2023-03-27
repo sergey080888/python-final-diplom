@@ -1,22 +1,23 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
-from .models import Shop,\
-    Category,\
-    Product,\
-    ProductInfo,\
-    Parameter,\
-    ProductParameter,\
-    Order,\
-    OrderItem,\
-    Contact,\
-    User
-
-
+from backend.models import (
+    User,
+    Shop,
+    Category,
+    Product,
+    ProductInfo,
+    Parameter,
+    ProductParameter,
+    Order,
+    OrderItem,
+    Contact,
+    ConfirmEmailToken,
+)
 
 
 @admin.register(User)
-class CustomUserAdmin(UserAdmin):
+class CustomUserAdmin(admin.ModelAdmin):
     """
     Панель управления пользователями
     """
@@ -44,9 +45,6 @@ class CustomUserAdmin(UserAdmin):
         ("Important dates", {"fields": ("last_login", "date_joined")}),
     )
     list_display = ("email", "first_name", "last_name", "is_staff")
-
-
-
 
 
 @admin.register(Shop)
@@ -94,3 +92,10 @@ class ContactAdmin(admin.ModelAdmin):
     pass
 
 
+# @admin.register(ConfirmEmailToken)
+# class ConfirmEmailTokenAdmin(admin.ModelAdmin):
+#     list_display = (
+#         "user",
+#         "key",
+#         "created_at",
+#     )

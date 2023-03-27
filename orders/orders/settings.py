@@ -113,7 +113,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = "en-us"
 
-TIME_ZONE = "UTC"
+TIME_ZONE = "Europe/Moscow"
 
 USE_I18N = True
 
@@ -127,6 +127,16 @@ USE_L10N = True
 
 STATIC_URL = "/static/"
 AUTH_USER_MODEL = "backend.User"
+
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+# EMAIL_USE_TLS = True
+
+EMAIL_HOST = "smtp.mail.ru"
+EMAIL_HOST_USER = "kovalsky.sergey@mail.ru"
+EMAIL_HOST_PASSWORD = "VPCwzFZithEW49PXATK4"
+EMAIL_PORT = "465"
+EMAIL_USE_SSL = True
+SERVER_EMAIL = EMAIL_HOST_USER
 
 REST_FRAMEWORK = {
 
