@@ -292,15 +292,6 @@ class OrderItem(models.Model):
 
 
 class Contact(models.Model):
-    CONTACT_TYPES = (
-        ("email", "Email"),
-        ("phone", "Phone"),
-        ("address", "Address"),
-    )
-
-    type = models.CharField(
-        max_length=10, choices=CONTACT_TYPES, verbose_name="Тип контакта"
-    )
     user = models.ForeignKey(
         User,
         verbose_name="Пользователь",
@@ -308,10 +299,22 @@ class Contact(models.Model):
         blank=True,
         on_delete=models.CASCADE,
     )
-    value = models.CharField(verbose_name="Значение", max_length=100)
+
+    city = models.CharField(max_length=50, verbose_name="Город", blank=True)
+    street = models.CharField(max_length=100, verbose_name="Улица", blank=True)
+    house = models.CharField(max_length=15, verbose_name="Дом", blank=True)
+    structure = models.CharField(max_length=15, verbose_name="Корпус", blank=True)
+    building = models.CharField(max_length=15, verbose_name="Строение", blank=True)
+    apartment = models.CharField(max_length=15, verbose_name="Квартира", blank=True)
+    phone = models.CharField(max_length=20, verbose_name="Телефон", blank=True)
+
+    class Meta:
+        verbose_name = "Контакты пользователя"
+        verbose_name_plural = "Список контактов пользователя"
 
     def __str__(self):
-        return f"{self.get_type_display()}: {self.value}"
+        return f"{self.city} {self.street} {self.house}"
+
 
 class ConfirmEmailToken(models.Model):
     class Meta:
