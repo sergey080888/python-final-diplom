@@ -100,7 +100,7 @@ class ProductInfoSerializer(serializers.ModelSerializer):
             "quantity",
             "price",
             "price_rrc",
-            "product_parameters",
+            # "product_parameters",
         )
         read_only_fields = ("id",)
 

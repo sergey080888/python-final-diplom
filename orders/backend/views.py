@@ -346,3 +346,30 @@ class ShopsList(ListAPIView):
 
     queryset = Shop.objects.filter(state=True)
     serializer_class = ShopSerializer
+
+class ProductView(APIView):
+    """
+    Класс для поиска товаров
+    """
+
+    def get(self, request, *args, **kwargs):
+        query = Q(shop__state=True)
+        shop_id = request.query_params.get("shop_id")
+        category_id = request.query_params.get("category_id")
+
+        if shop_id:
+            query = query & Q(shop_id=shop_id)
+
+        if category_id:
+            query = query & Q(product__category_id=category_id)
+
+        # фильтруем и отбрасываем дуликаты
+        queryset = (
+            ProductInfo.objects.filter(query)
+            .select_related("shop", "product__category")
+            .distinct()
+        )
+
+        serializer = ProductInfoSerializer(queryset, many=True)
+
+        return Response(serializer.data)
