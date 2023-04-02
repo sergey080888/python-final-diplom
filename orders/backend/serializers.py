@@ -111,8 +111,10 @@ class OrderItemSerializer(serializers.ModelSerializer):
         fields = (
             "id",
             "product_info",
+            "product",
             "quantity",
             "order",
+            "shop"
         )
         read_only_fields = ("id",)
         extra_kwargs = {"order": {"write_only": True}}
@@ -120,16 +122,19 @@ class OrderItemSerializer(serializers.ModelSerializer):
 
 
 class OrderSerializer(serializers.ModelSerializer):
+    total_sum = serializers.IntegerField()
+    id = serializers.StringRelatedField()
 
     class Meta:
         model = Order
         fields = (
             "id",
             "ordered_items",
-            "state",
+            "status",
             "dt",
             "total_sum",
-            "contact",
+           
+
         )
         read_only_fields = ("id",)
 
