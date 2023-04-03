@@ -472,7 +472,7 @@ class BasketView(APIView):
                         type(order_item["id"]) == int
                         and type(order_item["quantity"]) == int
                     ):
-                        print('0000000000')
+
                         objects_updated += OrderItem.objects.filter(
                             order_id=basket.id, id=order_item["id"]
                         ).update(quantity=order_item["quantity"])
@@ -480,6 +480,30 @@ class BasketView(APIView):
                 return JsonResponse(
                     {"Status": True, "Обновлено объектов": objects_updated}
                 )
+        return JsonResponse(
+            {"Status": False, "Errors": "Не указаны все необходимые аргументы"}
+        )
+
+    def delete(self,request,*args,**kwargs):
+        if not request.user.is_authenticated:
+            return JsonResponse(
+                {"Status": False, "Error": "Log in required"}, status=403
+            )
+        items_sting = request.data.get("items")
+        print(request.data)
+        if items_sting:
+            items_list = items_sting.split(",")
+            query = Q()
+            print(query)
+            objects_deleted = False
+            for order_item_id in items_list:
+                if order_item_id.isdigit():
+                    query = query | Q(id=order_item_id)
+                    objects_deleted = True
+
+            if objects_deleted:
+                deleted_count = OrderItem.objects.filter(query).delete()[0]
+                return JsonResponse({"Status": True, "Удалено объектов": deleted_count})
         return JsonResponse(
             {"Status": False, "Errors": "Не указаны все необходимые аргументы"}
         )
