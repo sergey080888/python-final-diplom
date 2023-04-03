@@ -434,10 +434,10 @@ class BasketView(APIView):
             )
         basket = (
             Order.objects.filter(user_id=request.user.id, status="basket")
-            # .prefetch_related(
-            #     "ordered_items__product_info__product__category",
-            #     "ordered_items__product_info__product_parameters__parameter",
-            # )
+            .prefetch_related(
+                "ordered_items__product_info__product__category",
+                "ordered_items__product_info__product_parameters__parameter",
+            )
             .annotate(
                 total_sum=Sum(
                     F("ordered_items__quantity")
@@ -446,7 +446,40 @@ class BasketView(APIView):
             )
             .distinct()
         )
-        print(basket)
         serializer = OrderSerializer(basket, many=True)
-        # print(serializer)
         return Response(serializer.data)
+
+    def put(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return JsonResponse(
+                {"Status": False, "Error": "Log in required"}, status=403
+            )
+
+        items_sting = request.data.get("items")
+        if items_sting:
+            try:
+                items_dict = load_json(items_sting)
+                print(items_dict)
+            except ValueError:
+                JsonResponse({"Status": False, "Errors": "Неверный формат запроса"})
+            else:
+                basket, _ = Order.objects.get_or_create(
+                    user_id=request.user.id, status="basket"
+                )
+                objects_updated = 0
+                for order_item in items_dict:
+                    if (
+                        type(order_item["id"]) == int
+                        and type(order_item["quantity"]) == int
+                    ):
+                        print('0000000000')
+                        objects_updated += OrderItem.objects.filter(
+                            order_id=basket.id, id=order_item["id"]
+                        ).update(quantity=order_item["quantity"])
+
+                return JsonResponse(
+                    {"Status": True, "Обновлено объектов": objects_updated}
+                )
+        return JsonResponse(
+            {"Status": False, "Errors": "Не указаны все необходимые аргументы"}
+        )

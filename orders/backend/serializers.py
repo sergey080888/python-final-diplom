@@ -123,8 +123,7 @@ class OrderItemSerializer(serializers.ModelSerializer):
 
 class OrderSerializer(serializers.ModelSerializer):
     total_sum = serializers.IntegerField()
-    id = serializers.StringRelatedField()
-
+    ordered_items = OrderItemSerializer(many=True)
     class Meta:
         model = Order
         fields = (

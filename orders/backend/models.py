@@ -183,7 +183,7 @@ class ProductInfo(models.Model):
         ]
 
     def __str__(self):
-        return f"{self.name} ({self.product.name} @ {self.shop.name})"
+        return f"{self.name}-{self.product.name}-Магазин:{self.shop.name}"
 
 
 class Parameter(models.Model):
@@ -296,6 +296,8 @@ class OrderItem(models.Model):
         verbose_name = "Заказанная позиция"
         verbose_name_plural = "Список заказанных позиций"
 
+    def __str__(self):
+        return f"Номер заказа:{self.order.id}-{self.product_info} Количество:{self.quantity}"
 
 class Contact(models.Model):
     user = models.ForeignKey(
