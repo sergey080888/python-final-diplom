@@ -99,4 +99,3 @@ class ConfirmEmailTokenAdmin(admin.ModelAdmin):
         "key",
         "created_at",
     )
-

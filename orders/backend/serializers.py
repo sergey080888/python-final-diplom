@@ -12,6 +12,7 @@ from backend.models import (
     Contact,
 )
 
+
 class ContactSerializer(serializers.ModelSerializer):
     class Meta:
         model = Contact
@@ -31,7 +32,6 @@ class ContactSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = User
         fields = (
@@ -42,6 +42,7 @@ class UserSerializer(serializers.ModelSerializer):
             "company",
             "position",
             "contacts",
+            "type",
         )
         read_only_fields = ("id",)
 
@@ -68,8 +69,6 @@ class ShopSerializer(serializers.ModelSerializer):
 
 
 class ProductSerializer(serializers.ModelSerializer):
-
-
     class Meta:
         model = Product
         fields = (
@@ -79,7 +78,6 @@ class ProductSerializer(serializers.ModelSerializer):
 
 
 class ProductParameterSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = ProductParameter
         fields = (
@@ -89,7 +87,6 @@ class ProductParameterSerializer(serializers.ModelSerializer):
 
 
 class ProductInfoSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = ProductInfo
         fields = (
@@ -108,22 +105,15 @@ class ProductInfoSerializer(serializers.ModelSerializer):
 class OrderItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = OrderItem
-        fields = (
-            "id",
-            "product_info",
-            "product",
-            "quantity",
-            "order",
-            "shop"
-        )
+        fields = ("id", "product_info", "product", "quantity", "order", "shop")
         read_only_fields = ("id",)
         extra_kwargs = {"order": {"write_only": True}}
-
 
 
 class OrderSerializer(serializers.ModelSerializer):
     total_sum = serializers.IntegerField()
     ordered_items = OrderItemSerializer(many=True)
+
     class Meta:
         model = Order
         fields = (
@@ -132,12 +122,11 @@ class OrderSerializer(serializers.ModelSerializer):
             "status",
             "dt",
             "total_sum",
-           
-
         )
         read_only_fields = ("id",)
 
+
 class ParametrSerialaizer(serializers.ModelSerializer):
     class Meta:
-        model =Parameter
-        fields = ('id', 'name')
+        model = Parameter
+        fields = ("id", "name")

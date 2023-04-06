@@ -133,13 +133,12 @@ EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 
 EMAIL_HOST = "smtp.mail.ru"
 EMAIL_HOST_USER = "kovalsky.sergey@mail.ru"
-EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
+EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD")
 EMAIL_PORT = "465"
 EMAIL_USE_SSL = True
 SERVER_EMAIL = EMAIL_HOST_USER
 
 REST_FRAMEWORK = {
-
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework.authentication.TokenAuthentication",
     ),

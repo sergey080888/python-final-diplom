@@ -13,8 +13,6 @@ new_order = Signal(
 )
 
 
-
-
 @receiver(new_user_registered)
 def new_user_registered_signal(user_id, **kwargs):
     """
@@ -60,6 +58,7 @@ def password_reset_token_created(sender, instance, reset_password_token, **kwarg
         [reset_password_token.user.email],
     )
     msg.send()
+
 
 @receiver(new_order)
 def new_order_signal(user_id, **kwargs):
