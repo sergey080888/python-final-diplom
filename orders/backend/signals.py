@@ -1,6 +1,6 @@
 from django.dispatch import receiver, Signal
 from django.conf import settings
-from backend.models import ConfirmEmailToken, User
+from backend.models import ConfirmEmailToken, User, Shop
 from django.core.mail import EmailMultiAlternatives
 from django_rest_passwordreset.signals import reset_password_token_created
 
@@ -12,7 +12,9 @@ new_order = Signal(
     providing_args=["user_id"],
 )
 
-
+price_update = Signal(
+    providing_args=["user_id"],
+)
 @receiver(new_user_registered)
 def new_user_registered_signal(user_id, **kwargs):
     """
@@ -79,3 +81,24 @@ def new_order_signal(user_id, **kwargs):
         [user.email],
     )
     msg.send()
+
+@receiver(price_update)
+def price_update_signal(user_id, **kwargs):
+    """
+    отправляем письмо с уведомлением об изменении прайса
+    """
+    # send an e-mail to the users
+    shop = Shop.objects.get(user_id=user_id).name
+    for email in User.objects.exclude(type="shop").values_list('email', flat=True):
+
+        msg = EmailMultiAlternatives(
+            # title:
+            f"Прайс-лист магазина {shop} обновлен",
+            # message:
+            f"Прайс-лист магазина {shop} обновлен",
+            # from:
+            settings.EMAIL_HOST_USER,
+            # to:
+            [email],
+        )
+        msg.send()

@@ -18,7 +18,10 @@ from django_rest_passwordreset.views import (
     reset_password_request_token,
     reset_password_confirm,
 )
+from rest_framework.routers import DefaultRouter
 
+r = DefaultRouter()
+r.register("partner/orders", PartnerOrders,  basename='book')
 app_name = "backend"
 urlpatterns = [
     path("partner/update", PartnerUpdate.as_view(), name="partner-update"),
@@ -37,5 +40,5 @@ urlpatterns = [
     path("order", OrderView.as_view(), name="order"),
     path("categories", СategoriesListView.as_view(), name="categories"),
     path("partner/state", PartnerState.as_view(), name="partner-state"),
-    path("partner/orders", PartnerOrders.as_view(), name="partner-orders"),
-]
+
+]+r.urls
