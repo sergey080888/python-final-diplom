@@ -1,6 +1,8 @@
 
 [Документация по запросам в PostMan](https://documenter.getpostman.com/view/21627627/2s93RZNq42) 
 
+
+создайте файл .env c паролем EMAIL_HOST_PASSWORD
 ## **установка СУБД**
 
     sudo nano  /etc/apt/sources.list.d/pgdg.list
