@@ -38,6 +38,8 @@ urlpatterns = [
     path("products", ProductView.as_view(), name="products"),
     path("basket", BasketView.as_view(), name="basket"),
     path("order", OrderView.as_view(), name="order"),
+    path("order/", OrderView.as_view(), name="order2"),
+    path("order/<pk>", OrderView.as_view(), name="order3"),
     path("categories", СategoriesListView.as_view(), name="categories"),
     path("partner/state", PartnerState.as_view(), name="partner-state"),
 ] + r.urls

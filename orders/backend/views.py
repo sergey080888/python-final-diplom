@@ -557,43 +557,47 @@ class OrderView(APIView):
             return JsonResponse(
                 {"Status": False, "Error": "Log in required"}, status=403
             )
-        # if pk:
-        #     order = (
-        #         Order.objects.filter(user_id=request.user.id)
-        #         .exclude(status="basket")
-        #         .prefetch_related(
-        #             "ordered_items__product_info__product__category",
-        #             "ordered_items__product_info__product_parameters__parameter",
-        #         )
-        #         .select_related("user")
-        #         .annotate(
-        #             total_sum=Sum(
-        #                 F("ordered_items__quantity")
-        #                 * F("ordered_items__product_info__price")
-        #             )
-        #         )
-        #         .distinct()
-        #     ).get(id=pk)
-        #     serializer = OrderSerializer(order, many=True)
-        #     return Response(serializer.data)
-        #
-        # else:
-        order = (
-            Order.objects.filter(user_id=request.user.id)
-            .exclude(status="basket")
-            .prefetch_related(
-                "ordered_items__product_info__product__category",
-                "ordered_items__product_info__product_parameters__parameter",
-            )
-            .select_related("user")
-            .annotate(
-                total_sum=Sum(
-                    F("ordered_items__quantity")
-                    * F("ordered_items__product_info__price")
+        if pk:
+            try:
+                order = (
+                    Order.objects.filter(user_id=request.user.id)
+                    .exclude(status="basket")
+                    .prefetch_related(
+                        "ordered_items__product_info__product__category",
+                        "ordered_items__product_info__product_parameters__parameter",
+                    )
+                    .select_related("user")
+                    .annotate(
+                        total_sum=Sum(
+                            F("ordered_items__quantity")
+                            * F("ordered_items__product_info__price")
+                        )
+                    )
+                    .distinct()
+                ).get(id=pk)
+            except Order.DoesNotExist as error:
+                return JsonResponse({"Status": False, "Errors": str(error)}, status=404)
+
+            serializer = OrderSerializer2(order)
+            return Response(serializer.data)
+
+        else:
+            order = (
+                Order.objects.filter(user_id=request.user.id)
+                .exclude(status="basket")
+                .prefetch_related(
+                    "ordered_items__product_info__product__category",
+                    "ordered_items__product_info__product_parameters__parameter",
                 )
+                .select_related("user")
+                .annotate(
+                    total_sum=Sum(
+                        F("ordered_items__quantity")
+                        * F("ordered_items__product_info__price")
+                    )
+                )
+                .distinct()
             )
-            .distinct()
-        ).get(id=pk)
         serializer = OrderSerializer(order, many=True)
         return Response(serializer.data)
 
@@ -613,7 +617,7 @@ class OrderView(APIView):
                     ).update(contact_id=request.data["contact"], status="new")
 
                 except IntegrityError as error:
-                    print(error)
+
                     return JsonResponse(
                         {"Status": False, "Errors": "Неправильно указаны аргументы"}
                     )
