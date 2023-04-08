@@ -8,10 +8,9 @@ from rest_framework.authtoken.models import Token
 from django.contrib.auth.password_validation import validate_password
 from django.core.validators import URLValidator
 from django.http import JsonResponse
-from rest_framework.viewsets import ReadOnlyModelViewSet, ViewSet
+from rest_framework.viewsets import ViewSet
 from ujson import loads as load_json
 from django.db import IntegrityError
-from django.shortcuts import render
 from requests import get
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import ListAPIView, get_object_or_404
@@ -408,7 +407,9 @@ class BasketView(APIView):
             try:
                 items_dict = load_json(items_sting)
             except ValueError:
-                return JsonResponse({"Status": False, "Errors": "Неверный формат запроса"})
+                return JsonResponse(
+                    {"Status": False, "Errors": "Неверный формат запроса"}
+                )
             else:
                 basket, _ = Order.objects.get_or_create(
                     user_id=request.user.id, status="basket"
@@ -439,7 +440,9 @@ class BasketView(APIView):
                             objects_created += 1
 
                     else:
-                        return JsonResponse({"Status": False, "Errors": serializer.errors})
+                        return JsonResponse(
+                            {"Status": False, "Errors": serializer.errors}
+                        )
 
                 return JsonResponse(
                     {"Status": True, "Создано объектов": objects_created}
@@ -493,17 +496,22 @@ class BasketView(APIView):
                 )
                 objects_updated = 0
                 for order_item in items_dict:
-                    order_item_qs=OrderItem.objects.filter(
-                            order_id=basket.id, id=order_item["id"]
-                        )
+                    order_item_qs = OrderItem.objects.filter(
+                        order_id=basket.id, id=order_item["id"]
+                    )
                     if (
                         type(order_item["id"]) == int
                         and type(order_item["quantity"]) == int
                     ) and order_item_qs:
-                        objects_updated += order_item_qs.update(quantity=order_item["quantity"])
+                        objects_updated += order_item_qs.update(
+                            quantity=order_item["quantity"]
+                        )
                     else:
                         return JsonResponse(
-                            {"Status": False,"Errors":'Объекты не обновлены, т.к. не верно указан тип или id'}
+                            {
+                                "Status": False,
+                                "Errors": "Объекты не обновлены, т.к. не верно указан тип или id",
+                            }
                         )
 
                 return JsonResponse(
@@ -538,7 +546,8 @@ class BasketView(APIView):
                 deleted_count = OrderItem.objects.filter(query).delete()[0]
                 if not deleted_count:
                     return JsonResponse(
-                        {"Status": False, "Errors": "Указан неверный ID"})
+                        {"Status": False, "Errors": "Указан неверный ID"}
+                    )
 
                 return JsonResponse({"Status": True, "Удалено объектов": deleted_count})
         return JsonResponse(
@@ -601,7 +610,6 @@ class OrderView(APIView):
         serializer = OrderSerializer(order, many=True)
         return Response(serializer.data)
 
-
     # разместить заказ из корзины
     def post(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
@@ -617,7 +625,6 @@ class OrderView(APIView):
                     ).update(contact_id=request.data["contact"], status="new")
 
                 except IntegrityError as error:
-
                     return JsonResponse(
                         {"Status": False, "Errors": "Неправильно указаны аргументы"}
                     )
@@ -687,43 +694,6 @@ class PartnerState(APIView):
         )
 
 
-# class PartnerOrders(APIView):
-#     """
-#     Класс для получения заказов поставщиками
-#     """
-#
-#     def get(self, request, *args, **kwargs):
-#         if not request.user.is_authenticated:
-#             return JsonResponse(
-#                 {"Status": False, "Error": "Log in required"}, status=403
-#             )
-#
-#         if request.user.type != "shop":
-#             return JsonResponse(
-#                 {"Status": False, "Error": "Только для магазинов"}, status=403
-#             )
-#         print(request.user.id)
-#         order = (
-#             Order.objects.filter(
-#                 ordered_items__product_info__shop__user_id=request.user.id
-#             )
-#             .exclude(status="basket")
-#             .prefetch_related(
-#                 "ordered_items__product_info__product__category",
-#                 "ordered_items__product_info__product_parameters__parameter",
-#             )
-#             .select_related("user")
-#             .annotate(
-#                 total_sum=Sum(
-#                     F("ordered_items__quantity")
-#                     * F("ordered_items__product_info__price")
-#                 )
-#             )
-#             .distinct()
-#         )
-#
-#         serializer = OrderSerializer(order, many=True)
-#         return Response(serializer.data)
 class PartnerOrders(ViewSet):
     authentication_classes = [TokenAuthentication]
     permission_classes = [permissions.IsAuthenticated]
