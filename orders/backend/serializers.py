@@ -102,29 +102,29 @@ class ProductInfoSerializer(serializers.ModelSerializer):
         read_only_fields = ("id",)
 
 
-# class OrderItemSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = OrderItem
-#         fields = ("id", "product_info", "product", "quantity", "order", "shop")
-#         read_only_fields = ("id",)
-#         extra_kwargs = {"order": {"write_only": True}}
-#
-#
-# class OrderSerializer(serializers.ModelSerializer):
-#     total_sum = serializers.IntegerField()
-#     ordered_items = OrderItemSerializer(many=True)
-#
-#     class Meta:
-#         model = Order
-#         fields = (
-#             "id",
-#             "ordered_items",
-#             "status",
-#             "dt",
-#             "total_sum",
-#         )
-#         read_only_fields = ("id",)
-#
+class OrderItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OrderItem
+        fields = ("id", "product_info", "product", "quantity", "order", "shop")
+        read_only_fields = ("id",)
+        extra_kwargs = {"order": {"write_only": True}}
+
+
+class OrderSerializer2(serializers.ModelSerializer):
+    total_sum = serializers.IntegerField()
+    ordered_items = OrderItemSerializer(many=True)
+
+    class Meta:
+        model = Order
+        fields = (
+            "id",
+            "ordered_items",
+            "status",
+            "dt",
+            "total_sum",
+        )
+        read_only_fields = ("id",)
+
 
 class ParametrSerialaizer(serializers.ModelSerializer):
     class Meta:
@@ -135,5 +135,4 @@ class ParametrSerialaizer(serializers.ModelSerializer):
 class OrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
-        fields = ["id", "dt"]
-
+        fields = ["id", "dt",]

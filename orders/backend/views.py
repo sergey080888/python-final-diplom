@@ -1,5 +1,5 @@
 from distutils.util import strtobool
-from backend.signals import new_user_registered,new_order, price_update
+from backend.signals import new_user_registered, new_order, price_update
 from django.contrib.auth import authenticate
 from django.db.models import Q, Sum, F
 from rest_framework import permissions
@@ -35,11 +35,11 @@ from backend.serializers import (
     ProductSerializer,
     ProductParameterSerializer,
     ProductInfoSerializer,
-    # OrderItemSerializer,
+    OrderItemSerializer,
     OrderSerializer,
+    OrderSerializer2,
     ParametrSerialaizer,
     ContactSerializer,
-
 )
 
 from rest_framework.response import Response
@@ -399,25 +399,31 @@ class BasketView(APIView):
             return JsonResponse(
                 {"Status": False, "Error": "Log in required"}, status=403
             )
-
+        if request.user.type == "shop":
+            return JsonResponse(
+                {"Status": False, "Error": "Не для магазинов"}, status=403
+            )
         items_sting = request.data.get("items")
         if items_sting:
             try:
                 items_dict = load_json(items_sting)
             except ValueError:
-                JsonResponse({"Status": False, "Errors": "Неверный формат запроса"})
+                return JsonResponse({"Status": False, "Errors": "Неверный формат запроса"})
             else:
                 basket, _ = Order.objects.get_or_create(
                     user_id=request.user.id, status="basket"
                 )
                 objects_created = 0
                 for order_item in items_dict:
-                    product = ProductInfo.objects.get(
-                        id=order_item["product_info"]
-                    ).product_id
-                    shop = ProductInfo.objects.get(
-                        id=order_item["product_info"]
-                    ).shop_id
+                    try:
+                        product = ProductInfo.objects.get(
+                            id=order_item["product_info"]
+                        ).product_id
+                        shop = ProductInfo.objects.get(
+                            id=order_item["product_info"]
+                        ).shop_id
+                    except ProductInfo.DoesNotExist as error:
+                        return JsonResponse({"Status": False, "Errors": str(error)})
                     order_item.update(
                         {"order": basket.id, "product": product, "shop": shop}
                     )
@@ -433,7 +439,7 @@ class BasketView(APIView):
                             objects_created += 1
 
                     else:
-                        JsonResponse({"Status": False, "Errors": serializer.errors})
+                        return JsonResponse({"Status": False, "Errors": serializer.errors})
 
                 return JsonResponse(
                     {"Status": True, "Создано объектов": objects_created}
@@ -462,10 +468,13 @@ class BasketView(APIView):
             )
             .distinct()
         )
-        serializer = OrderSerializer(basket, many=True)
+        serializer = OrderSerializer2(basket, many=True)
         return Response(serializer.data)
 
     def put(self, request, *args, **kwargs):
+        """
+        Обновляет содержимое корзины по id
+        """
         if not request.user.is_authenticated:
             return JsonResponse(
                 {"Status": False, "Error": "Log in required"}, status=403
@@ -484,13 +493,18 @@ class BasketView(APIView):
                 )
                 objects_updated = 0
                 for order_item in items_dict:
+                    order_item_qs=OrderItem.objects.filter(
+                            order_id=basket.id, id=order_item["id"]
+                        )
                     if (
                         type(order_item["id"]) == int
                         and type(order_item["quantity"]) == int
-                    ):
-                        objects_updated += OrderItem.objects.filter(
-                            order_id=basket.id, id=order_item["id"]
-                        ).update(quantity=order_item["quantity"])
+                    ) and order_item_qs:
+                        objects_updated += order_item_qs.update(quantity=order_item["quantity"])
+                    else:
+                        return JsonResponse(
+                            {"Status": False,"Errors":'Объекты не обновлены, т.к. не верно указан тип или id'}
+                        )
 
                 return JsonResponse(
                     {"Status": True, "Обновлено объектов": objects_updated}
@@ -522,6 +536,10 @@ class BasketView(APIView):
 
             if objects_deleted:
                 deleted_count = OrderItem.objects.filter(query).delete()[0]
+                if not deleted_count:
+                    return JsonResponse(
+                        {"Status": False, "Errors": "Указан неверный ID"})
+
                 return JsonResponse({"Status": True, "Удалено объектов": deleted_count})
         return JsonResponse(
             {"Status": False, "Errors": "Не указаны все необходимые аргументы"}
@@ -534,11 +552,32 @@ class OrderView(APIView):
     """
 
     # получить мои заказы
-    def get(self, request, *args, **kwargs):
+    def get(self, request, pk=None):
         if not request.user.is_authenticated:
             return JsonResponse(
                 {"Status": False, "Error": "Log in required"}, status=403
             )
+        # if pk:
+        #     order = (
+        #         Order.objects.filter(user_id=request.user.id)
+        #         .exclude(status="basket")
+        #         .prefetch_related(
+        #             "ordered_items__product_info__product__category",
+        #             "ordered_items__product_info__product_parameters__parameter",
+        #         )
+        #         .select_related("user")
+        #         .annotate(
+        #             total_sum=Sum(
+        #                 F("ordered_items__quantity")
+        #                 * F("ordered_items__product_info__price")
+        #             )
+        #         )
+        #         .distinct()
+        #     ).get(id=pk)
+        #     serializer = OrderSerializer(order, many=True)
+        #     return Response(serializer.data)
+        #
+        # else:
         order = (
             Order.objects.filter(user_id=request.user.id)
             .exclude(status="basket")
@@ -554,10 +593,10 @@ class OrderView(APIView):
                 )
             )
             .distinct()
-        )
-
+        ).get(id=pk)
         serializer = OrderSerializer(order, many=True)
         return Response(serializer.data)
+
 
     # разместить заказ из корзины
     def post(self, request, *args, **kwargs):
@@ -686,22 +725,36 @@ class PartnerOrders(ViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def list(self, request):
-        if not request.user.is_authenticated:
-            return JsonResponse(
-                            {"Status": False, "Error": "Log in required"}, status=403
-                        )
-
         if request.user.type != "shop":
             return JsonResponse(
                 {"Status": False, "Error": "Только для магазинов"}, status=403
             )
-        queryset = Order.objects.filter(ordered_items__shop__user_id=request.user.id).exclude(status="basket")
+        queryset = Order.objects.filter(
+            ordered_items__shop__user_id=request.user.id
+        ).exclude(status="basket")
         serializer = OrderSerializer(queryset, many=True)
 
         return Response(serializer.data)
 
     def retrieve(self, request, pk=None):
-        queryset = Order.objects.filter(ordered_items__shop__user_id=request.user.id).exclude(status="basket")
+        queryset = (
+            Order.objects.filter(
+                ordered_items__product_info__shop__user_id=request.user.id
+            )
+            .exclude(status="basket")
+            .prefetch_related(
+                "ordered_items__product_info__product__category",
+                "ordered_items__product_info__product_parameters__parameter",
+            )
+            .select_related("user")
+            .annotate(
+                total_sum=Sum(
+                    F("ordered_items__quantity")
+                    * F("ordered_items__product_info__price")
+                )
+            )
+            .distinct()
+        )
         order = get_object_or_404(queryset, pk=pk)
-        serializer = OrderSerializer(order)
+        serializer = OrderSerializer2(order)
         return Response(serializer.data)
